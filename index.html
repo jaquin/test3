@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Canlı Altın & Döviz Paneli (Demo)</title>
+<title>Canlı Altın & Döviz Paneli</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   .card { transition: transform 0.2s, background 0.2s; }
@@ -16,58 +16,64 @@
 <div id="root" class="w-full max-w-5xl p-6 text-center"></div>
 
 <script>
-// Demo veri ile panel
 let prevData = {};
-function getRandomValue(base) {
-  return (base + (Math.random() * 10 - 5)).toFixed(2);
-}
+const API_URL = 'https://altin-backend1905.vercel.app/api/altin';
 
 async function fetchData() {
   const root = document.getElementById('root');
+  root.innerHTML = '<div class="text-center text-xl">Yükleniyor…</div>';
 
-  // Demo veriler
-  const data = {
-    gold: getRandomValue(900),
-    silver: getRandomValue(11),
-    usd: getRandomValue(25),
-    eur: getRandomValue(27)
-  };
+  try {
+    const response = await fetch(API_URL);
+    const json = await response.json();
 
-  const getTrendClass = (key) => {
-    if (!prevData[key]) return '';
-    if (data[key] > prevData[key]) return 'trend-up';
-    if (data[key] < prevData[key]) return 'trend-down';
-    return '';
-  };
+    const data = {
+      gold: json?.GramAltin?.Selling ?? '--',
+      silver: json?.Gumus?.Selling ?? '--',
+      usd: json?.USD?.Selling ?? '--',
+      eur: json?.EUR?.Selling ?? '--'
+    };
 
-  prevData = {...data};
+    const getTrendClass = (key) => {
+      if (!prevData[key]) return '';
+      if (data[key] === '--') return '';
+      if (data[key] > prevData[key]) return 'trend-up';
+      if (data[key] < prevData[key]) return 'trend-down';
+      return '';
+    };
 
-  root.innerHTML = `
-    <h1 class="text-3xl font-bold mb-6 text-center">📊 Canlı Altın & Döviz (Demo)</h1>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
-        <div class="text-xl">🪙 Gram Altın</div>
-        <div class="mt-3 text-2xl font-bold ${getTrendClass('gold')}">${data.gold} ₺</div>
+    prevData = {...data};
+
+    root.innerHTML = `
+      <h1 class="text-3xl font-bold mb-6 text-center">📊 Canlı Altın & Döviz</h1>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+          <div class="text-xl">🪙 Gram Altın</div>
+          <div class="mt-3 text-2xl font-bold ${getTrendClass('gold')}">${data.gold} ₺</div>
+        </div>
+        <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+          <div class="text-xl">🥈 Gram Gümüş</div>
+          <div class="mt-3 text-2xl font-bold ${getTrendClass('silver')}">${data.silver} ₺</div>
+        </div>
+        <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+          <div class="text-xl">💵 Dolar</div>
+          <div class="mt-3 text-2xl font-bold ${getTrendClass('usd')}">${data.usd} $</div>
+        </div>
+        <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+          <div class="text-xl">💶 Euro</div>
+          <div class="mt-3 text-2xl font-bold ${getTrendClass('eur')}">${data.eur} $</div>
+        </div>
       </div>
-      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
-        <div class="text-xl">🥈 Gram Gümüş</div>
-        <div class="mt-3 text-2xl font-bold ${getTrendClass('silver')}">${data.silver} ₺</div>
-      </div>
-      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
-        <div class="text-xl">💵 Dolar</div>
-        <div class="mt-3 text-2xl font-bold ${getTrendClass('usd')}">${data.usd} $</div>
-      </div>
-      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
-        <div class="text-xl">💶 Euro</div>
-        <div class="mt-3 text-2xl font-bold ${getTrendClass('eur')}">${data.eur} $</div>
-      </div>
-    </div>
-    <div class="mt-6 text-center text-sm opacity-70">Son güncelleme: ${new Date().toLocaleTimeString('tr-TR')}</div>
-  `;
+      <div class="mt-6 text-center text-sm opacity-70">Son güncelleme: ${new Date().toLocaleTimeString('tr-TR')}</div>
+    `;
+  } catch (e) {
+    root.innerHTML = '<div class="text-red-500 text-center">❌ Veri çekilemedi / Backend veya ağ sorunu</div>';
+    console.error(e);
+  }
 }
 
 fetchData();
-setInterval(fetchData, 5000); // 5 saniyede bir anlık güncelleme
+setInterval(fetchData, 5000);
 </script>
 </body>
 </html>
