@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finans Panel PRO++</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, Arial;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      padding: 14px;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,0.12);
+    }
+
+    .name {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .value {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      opacity: 0.7;
+      font-size: 13px;
+    }
+
+    .error {
+      color: #ff6b6b;
+    }
+
+    .ok {
+      color: #4ade80;
+    }
+
+    .refresh {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💰 Finans Panel PRO++</h1>
+
+    <div id="grid" class="grid"></div>
+
+    <div id="status" class="status">Yükleniyor…</div>
+    <div class="refresh">⏱️ 15 saniyede bir otomatik yenilenir</div>
+  </div>
+
+<script>
+const API =
+  "https://api.allorigins.win/raw?url=" +
+  encodeURIComponent("https://finans.truncgil.com/v4/today.json");
+
+const targets = [
+  { key: "USD", name: "Dolar" },
+  { key: "EUR", name: "Euro" },
+  { key: "GA", name: "Gram Altın" },
+  { key: "GUMUS", name: "Gümüş" },
+  { key: "BTC", name: "Bitcoin" }
+];
+
+function createCard(title, value) {
+  return `
+    <div class="card">
+      <div class="name">${title}</div>
+      <div class="value">${value}</div>
+    </div>
+  `;
+}
+
+async function safeFetch(url, timeout = 8000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return await res.json();
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+}
+
+async function loadData() {
+  const status = document.getElementById("status");
+  const grid = document.getElementById("grid");
+
+  status.textContent = "Güncelleniyor…";
+  status.className = "status";
+
+  try {
+    const data = await safeFetch(API);
+
+    let html = "";
+
+    targets.forEach(t => {
+      const item = data[t.key];
+      const value = item?.Alış || item?.Satis || "-";
+      html += createCard(t.name, value);
+    });
+
+    grid.innerHTML = html;
+    status.textContent = "✔ Anlık veriler güncellendi";
+    status.className = "status ok";
+
+  } catch (err) {
+    console.error(err);
+    status.textContent =
+      "❌ Veri çekilemedi (GitHub Pages CORS olabilir)";
+    status.className = "status error";
+  }
+}
+
+// ilk yükleme
+loadData();
+
+// 🔁 otomatik yenile (kasmadan)
+setInterval(loadData, 15000);
+</script>
+</body>
+</html>
