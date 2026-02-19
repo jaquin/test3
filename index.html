@@ -28,8 +28,8 @@ async function fetchData() {
     const json = await response.json();
 
     const data = {
-      gold: json?.GramAltin?.Selling ?? '--',
-      silver: json?.Gumus?.Selling ?? '--',
+      gold: json?.GRA?.Selling ?? '--',
+      silver: json?.GUMUS?.Selling ?? '--',
       usd: json?.USD?.Selling ?? '--',
       eur: json?.EUR?.Selling ?? '--'
     };
@@ -57,11 +57,11 @@ async function fetchData() {
         </div>
         <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
           <div class="text-xl">💵 Dolar</div>
-          <div class="mt-3 text-2xl font-bold ${getTrendClass('usd')}">${data.usd} $</div>
+          <div class="mt-3 text-2xl font-bold ${getTrendClass('usd')}">${data.usd} ₺</div>
         </div>
         <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
           <div class="text-xl">💶 Euro</div>
-          <div class="mt-3 text-2xl font-bold ${getTrendClass('eur')}">${data.eur} $</div>
+          <div class="mt-3 text-2xl font-bold ${getTrendClass('eur')}">${data.eur} ₺</div>
         </div>
       </div>
       <div class="mt-6 text-center text-sm opacity-70">Son güncelleme: ${new Date().toLocaleTimeString('tr-TR')}</div>
