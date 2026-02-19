@@ -1,164 +1,73 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Finans Panel PRO++</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, Arial;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      color: white;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 12px;
-    }
-
-    .card {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(10px);
-      border-radius: 14px;
-      padding: 14px;
-      transition: 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-3px);
-      background: rgba(255,255,255,0.12);
-    }
-
-    .name {
-      font-size: 13px;
-      opacity: 0.8;
-    }
-
-    .value {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 4px;
-    }
-
-    .status {
-      text-align: center;
-      margin-top: 15px;
-      opacity: 0.7;
-      font-size: 13px;
-    }
-
-    .error {
-      color: #ff6b6b;
-    }
-
-    .ok {
-      color: #4ade80;
-    }
-
-    .refresh {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 12px;
-      opacity: 0.6;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canlı Altın & Döviz Paneli (Demo)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  .card { transition: transform 0.2s, background 0.2s; }
+  .card:hover { transform: scale(1.05); background: rgba(255,255,255,0.15); }
+  .trend-up { color: #4ade80; }
+  .trend-down { color: #f87171; }
+</style>
 </head>
-<body>
-  <div class="container">
-    <h1>💰 Finans Panel PRO++</h1>
-
-    <div id="grid" class="grid"></div>
-
-    <div id="status" class="status">Yükleniyor…</div>
-    <div class="refresh">⏱️ 15 saniyede bir otomatik yenilenir</div>
-  </div>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white min-h-screen flex items-center justify-center">
+<div id="root" class="w-full max-w-5xl p-6 text-center"></div>
 
 <script>
-const API =
-  "https://api.allorigins.win/raw?url=" +
-  encodeURIComponent("https://finans.truncgil.com/v4/today.json");
+// Demo veri ile panel
+let prevData = {};
+function getRandomValue(base) {
+  return (base + (Math.random() * 10 - 5)).toFixed(2);
+}
 
-const targets = [
-  { key: "USD", name: "Dolar" },
-  { key: "EUR", name: "Euro" },
-  { key: "GA", name: "Gram Altın" },
-  { key: "GUMUS", name: "Gümüş" },
-  { key: "BTC", name: "Bitcoin" }
-];
+async function fetchData() {
+  const root = document.getElementById('root');
 
-function createCard(title, value) {
-  return `
-    <div class="card">
-      <div class="name">${title}</div>
-      <div class="value">${value}</div>
+  // Demo veriler
+  const data = {
+    gold: getRandomValue(900),
+    silver: getRandomValue(11),
+    usd: getRandomValue(25),
+    eur: getRandomValue(27)
+  };
+
+  const getTrendClass = (key) => {
+    if (!prevData[key]) return '';
+    if (data[key] > prevData[key]) return 'trend-up';
+    if (data[key] < prevData[key]) return 'trend-down';
+    return '';
+  };
+
+  prevData = {...data};
+
+  root.innerHTML = `
+    <h1 class="text-3xl font-bold mb-6 text-center">📊 Canlı Altın & Döviz (Demo)</h1>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+        <div class="text-xl">🪙 Gram Altın</div>
+        <div class="mt-3 text-2xl font-bold ${getTrendClass('gold')}">${data.gold} ₺</div>
+      </div>
+      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+        <div class="text-xl">🥈 Gram Gümüş</div>
+        <div class="mt-3 text-2xl font-bold ${getTrendClass('silver')}">${data.silver} ₺</div>
+      </div>
+      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+        <div class="text-xl">💵 Dolar</div>
+        <div class="mt-3 text-2xl font-bold ${getTrendClass('usd')}">${data.usd} $</div>
+      </div>
+      <div class="card bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
+        <div class="text-xl">💶 Euro</div>
+        <div class="mt-3 text-2xl font-bold ${getTrendClass('eur')}">${data.eur} $</div>
+      </div>
     </div>
+    <div class="mt-6 text-center text-sm opacity-70">Son güncelleme: ${new Date().toLocaleTimeString('tr-TR')}</div>
   `;
 }
 
-async function safeFetch(url, timeout = 8000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(id);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return await res.json();
-  } catch (err) {
-    clearTimeout(id);
-    throw err;
-  }
-}
-
-async function loadData() {
-  const status = document.getElementById("status");
-  const grid = document.getElementById("grid");
-
-  status.textContent = "Güncelleniyor…";
-  status.className = "status";
-
-  try {
-    const data = await safeFetch(API);
-
-    let html = "";
-
-    targets.forEach(t => {
-      const item = data[t.key];
-      const value = item?.Alış || item?.Satis || "-";
-      html += createCard(t.name, value);
-    });
-
-    grid.innerHTML = html;
-    status.textContent = "✔ Anlık veriler güncellendi";
-    status.className = "status ok";
-
-  } catch (err) {
-    console.error(err);
-    status.textContent =
-      "❌ Veri çekilemedi (GitHub Pages CORS olabilir)";
-    status.className = "status error";
-  }
-}
-
-// ilk yükleme
-loadData();
-
-// 🔁 otomatik yenile (kasmadan)
-setInterval(loadData, 15000);
+fetchData();
+setInterval(fetchData, 5000); // 5 saniyede bir anlık güncelleme
 </script>
 </body>
 </html>
